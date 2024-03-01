@@ -50,7 +50,7 @@ namespace Tutorial2
                     ((StatusEffectSummon)data).summonCard = Get<CardData>("shadeSnake"); //Alternatively, I could've put mhcdc9.wildfrost.tutorial.shadeSnake
                 })
                 );
-            Debug.Log("[Tutorial] Summon Shade Snake Added.");
+            //Debug.Log("[Tutorial] Summon Shade Snake Added.");
 
             //Status 1: Instant Summon Shade Snake
             statusEffects.Add(
@@ -60,7 +60,7 @@ namespace Tutorial2
                     ((StatusEffectInstantSummon)data).targetSummon = Get<StatusEffectData>("Summon Shade Snake") as StatusEffectSummon;
                 })
                 );
-            Debug.Log("[Tutorial] Instant Summon Shade Snake Added.");
+            //Debug.Log("[Tutorial] Instant Summon Shade Snake Added.");
 
             //Status 2: Summon Snake On Deploy
             statusEffects.Add(
@@ -72,7 +72,7 @@ namespace Tutorial2
                     ((StatusEffectApplyXWhenDeployed)data).effectToApply = Get<StatusEffectData>("Instant Summon Shade Snake");
                 })
                 );
-            Debug.Log("[Tutorial] Summon Shade Snake When Deployed Added.");
+            //Debug.Log("[Tutorial] Summon Shade Snake When Deployed Added.");
 
             //Status 3: Trigger When Shade Serpent In Row Attacks
             statusEffects.Add(
@@ -94,7 +94,7 @@ namespace Tutorial2
                         ((StatusEffectTriggerWhenCertainAllyAttacks)data).ally = Get<CardData>("shadeSerpent");
                     })
                 );
-
+            //Debug.Log("[Tutorial] Trigger When Shade Serpent In Row Added.");
 
 
             cards = new List<CardDataBuilder>();
@@ -167,13 +167,13 @@ namespace Tutorial2
     //Status Effect Class
     public class StatusEffectTriggerWhenCertainAllyAttacks : StatusEffectTriggerWhenAllyAttacks
     {
-        //Cannot change allyInRow to false without some publicizing. Shade Snake is sad :(
+        //Cannot change allyInRow or againstTarget without some publicizing. Shade Snake is sad :(
 
         public CardData ally;
 
         public override bool RunHitEvent(Hit hit)
         {
-            Debug.Log(hit.attacker?.name);
+            //Debug.Log(hit.attacker?.name);
             if (hit.attacker?.name == ally.name)
             {
                 return base.RunHitEvent(hit);
