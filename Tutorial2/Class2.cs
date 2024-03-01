@@ -65,7 +65,7 @@ namespace Tutorial2
             //Status 2: Summon Snake On Deploy
             statusEffects.Add(
                 StatusCopy("When Deployed Summon Wowee", "When Deployed Summon Shade Snake")
-                .WithText("When Deployed, Summon {0}")
+                .WithText("When deployed, summon {0}")
                 .WithTextInsert("<card=mhcdc9.wildfrost.tutorial.shadeSnake>")
                 .SubscribeToAfterAllBuildEvent(delegate (StatusEffectData data)
                 {
@@ -79,7 +79,7 @@ namespace Tutorial2
                 new StatusEffectDataBuilder(this)
                 .Create<StatusEffectTriggerWhenCertainAllyAttacks>("Trigger When Shade Serpent In Row Attacks")
                 .WithCanBeBoosted(false)
-                .WithText("Trigger When {0} In Row Attacks")
+                .WithText("Trigger when {0} in row attacks")
                 .WithTextInsert("<card=mhcdc9.wildfrost.tutorial.shadeSerpent>")
                 .WithType("")
                 .FreeModify(
@@ -106,7 +106,7 @@ namespace Tutorial2
                 .SetStats(4, 3, 0)
                 .WithCardType("Summoned")
                 .WithFlavour("Hissssssssss") //Should not show up anymore.
-                .SetStartWithEffect(SStack("Trigger When Ally In Row Attacks",1))
+                //.SetStartWithEffect(SStack("Trigger When Ally In Row Attacks",1))
                 .SubscribeToAfterAllBuildEvent(delegate (CardData data)
                 {
                     data.startWithEffects = new CardData.StatusEffectStacks[1]
@@ -146,7 +146,7 @@ namespace Tutorial2
             base.Unload();
         }
 
-        public override List<T> AddAssets<T, Y>() //This method is called 6 times in base.Load() for each Builder. Can you name them all?
+        public override List<T> AddAssets<T, Y>() //This method is called 6-7 times in base.Load() for each Builder. Can you name them all?
         {
             var typeName = typeof(Y).Name;
             Debug.Log("[Tutorial] " + typeName);
