@@ -32,7 +32,7 @@ namespace Tutorial1
         {
             base.Unload();
             Events.OnCardDataCreated -= BigBooshu;
-            Events.OnCardDataCreated += ScaryEnemies;
+            Events.OnCardDataCreated -= ScaryEnemies;
         }
 
 

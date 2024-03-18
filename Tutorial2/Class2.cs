@@ -132,29 +132,28 @@ namespace Tutorial2
                 })
                 );
 
-
             preLoaded = true;
         }
-        protected override void Load()
+        public override void Load()
         {
-            if(!preLoaded) { CreateModAssets(); } //The if statement is a flourish really. It makes the 2nd load of Load-Unload-Load faster.
+            if (!preLoaded) { CreateModAssets(); } //The if statement is a flourish really. It makes the 2nd load of Load-Unload-Load faster.
             base.Load();
         }
 
-        protected override void Unload()
+        public override void Unload()
         {
             base.Unload();
         }
 
         public override List<T> AddAssets<T, Y>() //This method is called 6-7 times in base.Load() for each Builder. Can you name them all?
         {
-            var typeName = typeof(Y).Name;
-            Debug.Log("[Tutorial] " + typeName);
+            var typeName = typeof(T).Name;
+            //Debug.Log("[Tutorial] " + typeName);
             switch(typeName)
             {
-                case nameof(CardData):
+                case nameof(CardDataBuilder):
                     return cards.Cast<T>().ToList();
-                case nameof(StatusEffectData):
+                case nameof(StatusEffectDataBuilder):
                     return statusEffects.Cast<T>().ToList();
                 default:
                     return null;
