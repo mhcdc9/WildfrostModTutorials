@@ -40,15 +40,15 @@ namespace Tutorial3
         private void CreateModAssets()
         {
             keywords = new List<KeywordDataBuilder>();
-            Debug.Log(ModDirectory);
+
             keywords.Add(
                 new KeywordDataBuilder(this)
                 .Create("glacial")
                 .WithTitle("Glacial")
-                .WithTitleColour(new Color(0.85f, 0.44f, 0.85f)) //Light Purple
+                .WithTitleColour(new Color(0.85f, 0.44f, 0.85f)) //Light purple
                 .WithShowName(true) //Shows name in Keyword box (as opposed to a nonexistant icon).
                 .WithDescription("Apply equal <keyword=snow> or <keyword=frost> when the other is applied|Does not cause infinites!") //Format is body|note.
-                .WithNoteColour(new Color(0.85f, 0.44f, 0.85f))
+                .WithNoteColour(new Color(0.85f, 0.44f, 0.85f)) //Somewhat teal
                 .WithBodyColour(new Color(0.2f,0.5f,0.5f))
                 .WithCanStack(false)
                 );
@@ -62,19 +62,19 @@ namespace Tutorial3
                 .WithImage("GlacialCharm.png")
                 .WithTitle("Glacial Charm")
                 .WithText($"Gain <keyword={Extensions.PrefixGUID("glacial",this)}>") //Get allows me to skip the GUID. This does not.
-                //.WithTier(2) //Affects cost in shops
-                //.ChangeHP(1) //Not in final version
-                //.WithSetHP(true) //Not in final version
-                //.SetAttackEffects(SStack("Snow",1),SStack("Frost",1)) //Not in final version. SStack is a shorthand function for making StatusEffctStacks defined in the previous tutorial.
-                .SubscribeToAfterAllBuildEvent( delegate(CardUpgradeData data)
+                .WithTier(2) //Affects cost in shops
+                .SubscribeToAfterAllBuildEvent(delegate (CardUpgradeData data)
                 {
-                    data.effects = new CardData.StatusEffectStacks[1] { SStack("Apply Equal Snow And Frost",1)};
+                    data.effects = new CardData.StatusEffectStacks[1] { SStack("Apply Equal Snow And Frost", 1) };
                     CardScriptChangeBackground script = ScriptableObject.CreateInstance<CardScriptChangeBackground>();
                     script.imagePath = this.ImagePath("Frostail BG.png");
                     data.scripts = new CardScript[1] { script };
                 })
                 );
 
+
+
+            
             statusEffects = new List<StatusEffectDataBuilder>();
 
             statusEffects.Add(
