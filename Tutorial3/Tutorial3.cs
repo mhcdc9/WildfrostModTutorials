@@ -126,13 +126,13 @@ namespace Tutorial3
     }
 
 
-    public class StatusEffectMeldXandY : StatusEffectApplyX
+    public class StatusEffectMeldXandY : StatusEffectData
     {
         public string statusType1;
 
         public string statusType2;
 
-        //effectToApply from StatusEffectApplyX
+        public StatusEffectData effectToApply;//effectToApply from StatusEffectApplyX
 
         public StatusEffectData effectToApply2;
 

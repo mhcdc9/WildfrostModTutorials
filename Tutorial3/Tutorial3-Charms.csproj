@@ -436,7 +436,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class3.cs" />
+    <Compile Include="Tutorial3.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
