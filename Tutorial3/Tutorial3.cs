@@ -21,8 +21,6 @@ namespace Tutorial3
         {
         }
 
-        private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(TryGet<StatusEffectData>(name), amount);
-
         private T TryGet<T>(string name) where T : DataFile
         {
             T data;
@@ -36,6 +34,10 @@ namespace Tutorial3
 
             return data;
         }
+
+        private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(TryGet<StatusEffectData>(name), amount);
+
+        private CardData.TraitStacks TStack(string name, int amount) => new CardData.TraitStacks(TryGet<TraitData>(name), amount); 
 
         public override string GUID => "mhcdc9.wildfrost.tutorial";
 
