@@ -21,7 +21,21 @@ namespace Tutorial3
         {
         }
 
-        private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(Get<StatusEffectData>(name), amount);
+        private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(TryGet<StatusEffectData>(name), amount);
+
+        private T TryGet<T>(string name) where T : DataFile
+        {
+            T data;
+            if (typeof(StatusEffectData).IsAssignableFrom(typeof(T)))
+                data = base.Get<StatusEffectData>(name) as T;
+            else
+                data = base.Get<T>(name);
+
+            if (data == null)
+                throw new Exception($"TryGet Error: Could not find a [{typeof(T).Name}] with the name [{name}] or [{Extensions.PrefixGUID(name, this)}]");
+
+            return data;
+        }
 
         public override string GUID => "mhcdc9.wildfrost.tutorial";
 
@@ -87,8 +101,8 @@ namespace Tutorial3
                 {
                     data.statusType1 = "snow";
                     data.statusType2 = "frost";
-                    data.effectToApply = Get<StatusEffectData>("Snow").InstantiateKeepName();
-                    data.effectToApply2 = Get<StatusEffectData>("Frost").InstantiateKeepName();
+                    data.effectToApply = TryGet<StatusEffectData>("Snow").InstantiateKeepName();
+                    data.effectToApply2 = TryGet<StatusEffectData>("Frost").InstantiateKeepName();
                     data.eventPriority = 1;
                 })
                 );

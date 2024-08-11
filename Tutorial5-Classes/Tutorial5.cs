@@ -137,7 +137,7 @@ namespace Tutorial5_Classes
             bells.Add(new GameModifierDataBuilder(this)
                 .Create("BlessingCycler")
                 .WithTitle("Sun Bell of Cycling")
-                .WithDescription("At the end of each turn, draw until you have <3> cards in hand")
+                .WithDescription("Reduce hand size by 3, but draw a card at the end of each turn")
                 .WithBellSprite(ImagePath("cycleBell.png").ToSprite())
                 .WithDingerSprite(ImagePath("cycleDinger.png").ToSprite())
                 .WithRingSfxEvent(Get<GameModifierData>("DoubleBlingsFromCombos").ringSfxEvent)
@@ -146,8 +146,8 @@ namespace Tutorial5_Classes
                 (data) =>
                 {
                     ScriptChangeHandSize handSize = ScriptableObject.CreateInstance<ScriptChangeHandSize>();
-                    handSize.name = "Set Hand Size To 5";
-                    handSize.set = true;
+                    handSize.name = "Reduce Hand Size By 3";
+                    handSize.set = false;
                     handSize.value = 3;
                     data.startScripts = new Script[] { handSize };
                 })

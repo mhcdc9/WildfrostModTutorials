@@ -35,7 +35,6 @@ namespace Tutorial2
             else
                 data = base.Get<T>(name);
 
-            //Comment out this debug if-else statment below once you feel like you are confident you don't need it (it will bloat the Log otherwise).
             if (data == null)
                 throw new Exception($"TryGet Error: Could not find a [{typeof(T).Name}] with the name [{name}] or [{Extensions.PrefixGUID(name, this)}]");
 
