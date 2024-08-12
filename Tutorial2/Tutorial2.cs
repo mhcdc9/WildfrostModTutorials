@@ -44,10 +44,9 @@ namespace Tutorial2
         private StatusEffectDataBuilder StatusCopy(string oldName, string newName)
         {
             StatusEffectData data = TryGet<StatusEffectData>(oldName).InstantiateKeepName();
-            data.name = newName;
-            data.ModAdded = this;
-            StatusEffectDataBuilder builder = data.Edit<StatusEffectData,StatusEffectDataBuilder>()
-                .FreeModify((_data) => { _data.ModAdded = null; });
+            data.name = GUID + "." + newName;
+            StatusEffectDataBuilder builder = data.Edit<StatusEffectData, StatusEffectDataBuilder>();
+            builder.Mod = this;
             return builder;
         }
 
