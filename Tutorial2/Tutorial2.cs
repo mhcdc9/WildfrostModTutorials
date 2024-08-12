@@ -45,8 +45,9 @@ namespace Tutorial2
         {
             StatusEffectData data = TryGet<StatusEffectData>(oldName).InstantiateKeepName();
             data.name = newName;
-            StatusEffectDataBuilder builder = data.Edit<StatusEffectData,StatusEffectDataBuilder>();
-            builder.Mod = this;
+            data.ModAdded = this;
+            StatusEffectDataBuilder builder = data.Edit<StatusEffectData,StatusEffectDataBuilder>()
+                .FreeModify((_data) => { _data.ModAdded = null; });
             return builder;
         }
 
