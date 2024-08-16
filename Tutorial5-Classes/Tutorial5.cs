@@ -2,12 +2,17 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
+using UnityEngine.Localization.Tables;
+using UnityEngine.UI;
 
 namespace Tutorial5_Classes
 {
@@ -20,6 +25,8 @@ namespace Tutorial5_Classes
         public override string Title => "Tutorial 5";
 
         public override string Description => "Learn how to combine a collection of cards, charms, and bells to make a tribe.";
+
+        internal static Tutorial5 instance;
 
         public static void AddComponent(string name)
         {
@@ -39,10 +46,24 @@ namespace Tutorial5_Classes
         private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(Get<StatusEffectData>(name), amount);
         private CardData.TraitStacks TStack(string name, int amount) => new CardData.TraitStacks(Get<TraitData>(name), amount);
 
+        internal T TryGet<T>(string name) where T : DataFile
+        {
+            T data;
+            if (typeof(StatusEffectData).IsAssignableFrom(typeof(T)))
+                data = base.Get<StatusEffectData>(name) as T;
+            else
+                data = base.Get<T>(name);
+
+            if (data == null)
+                throw new Exception($"TryGet Error: Could not find a [{typeof(T).Name}] with the name [{name}] or [{Extensions.PrefixGUID(name, this)}]");
+
+            return data;
+        }
+
         private CardDataBuilder CardCopy(string oldName, string newName)
         {
-            CardData data = Get<CardData>(oldName).InstantiateKeepName();
-            data.name = newName;
+            CardData data = TryGet<CardData>(oldName).InstantiateKeepName();
+            data.name = GUID + "." + newName;
             CardDataBuilder builder = data.Edit<CardData, CardDataBuilder>();
             builder.Mod = this;
             return builder;
@@ -50,14 +71,55 @@ namespace Tutorial5_Classes
 
         private ClassDataBuilder TribeCopy(string oldName, string newName)
         {
-            ClassData data = Get<ClassData>(oldName).InstantiateKeepName();
-            data.name = newName;
+            ClassData data = TryGet<ClassData>(oldName).InstantiateKeepName();
+            data.name = GUID + "." + newName;
             ClassDataBuilder builder = data.Edit<ClassData, ClassDataBuilder>();
             builder.Mod = this;
             return builder;
         }
 
-        private CardData[] CardList(params string[] names) => names.Select((s) => Get<CardData>(s)).ToArray();
+        private T[] DataList<T>(params string[] names) where T : DataFile => names.Select((s) => TryGet<T>(s)).ToArray();
+
+        private CardScript GiveUpgrade(string name = "Crown")
+        {
+            CardScriptGiveUpgrade script = ScriptableObject.CreateInstance<CardScriptGiveUpgrade>();
+            script.name = $"Give {name}";
+            script.upgradeData = Get<CardUpgradeData>(name);
+            return script;
+        }
+
+        private CardScript AddRandomHealth(int min, int max)
+        {
+            CardScriptAddRandomHealth health = ScriptableObject.CreateInstance<CardScriptAddRandomHealth>();
+            health.name = "Random Health";
+            health.healthRange = new Vector2Int(min,max);
+            return health;
+        }
+
+        private CardScript AddRandomDamage(int min, int max)
+        {
+            CardScriptAddRandomDamage damage = ScriptableObject.CreateInstance<CardScriptAddRandomDamage>();
+            damage.name = "Give Damage";
+            damage.damageRange = new Vector2Int(min, max);
+            return damage;
+        }
+
+        private CardScript AddRandomCounter(int min, int max)
+        {
+            CardScriptAddRandomCounter counter = ScriptableObject.CreateInstance<CardScriptAddRandomCounter>();
+            counter.name = "Give Counter";
+            counter.counterRange = new Vector2Int(min, max);
+            return counter;
+        }
+
+        private RewardPool CreateRewardPool(string name, string type, DataFile[] list)
+        {
+            RewardPool pool = new RewardPool();
+            pool.name = name;
+            pool.type = type;
+            pool.list = list.ToList();
+            return pool;
+        }
 
         private void CreateModAssets()
         {
@@ -66,19 +128,13 @@ namespace Tutorial5_Classes
                 .FreeModify(
                 (data) =>
                 {
-                    CardScriptGiveUpgrade crown = ScriptableObject.CreateInstance<CardScriptGiveUpgrade>();
-                    crown.name = "Give Crown";
-                    crown.upgradeData = Get<CardUpgradeData>("Crown");
-                    CardScriptAddRandomHealth health = ScriptableObject.CreateInstance<CardScriptAddRandomHealth>();
-                    health.name = "Random Health";
-                    health.healthRange = new Vector2Int(-2, 2);
-                    CardScriptAddRandomDamage damage = ScriptableObject.CreateInstance<CardScriptAddRandomDamage>();
-                    damage.name = "Give Damage";
-                    damage.damageRange = new Vector2Int(-1, 1);
-                    CardScriptAddRandomCounter counter = ScriptableObject.CreateInstance<CardScriptAddRandomCounter>();
-                    counter.name = "Give Counter";
-                    counter.counterRange = new Vector2Int(0, 1);
-                    data.createScripts = new CardScript[] { crown, health, damage, counter };
+                    data.createScripts = new CardScript[] 
+                    { 
+                        GiveUpgrade(),
+                        AddRandomHealth(-2,2),
+                        AddRandomDamage(-1,1),
+                        AddRandomCounter(-1,1)
+                    };
                 })
             );
 
@@ -90,19 +146,13 @@ namespace Tutorial5_Classes
                 {
                     data.traits.Add(TStack("Draw", 1));
 
-                    CardScriptGiveUpgrade crown = ScriptableObject.CreateInstance<CardScriptGiveUpgrade>();
-                    crown.name = "Give Crown";
-                    crown.upgradeData = Get<CardUpgradeData>("Crown");
-                    CardScriptAddRandomHealth health = ScriptableObject.CreateInstance<CardScriptAddRandomHealth>();
-                    health.name = "Random Health";
-                    health.healthRange = new Vector2Int(-1, 3);
-                    CardScriptAddRandomDamage damage = ScriptableObject.CreateInstance<CardScriptAddRandomDamage>();
-                    damage.name = "Give Damage";
-                    damage.damageRange = new Vector2Int(0, 2);
-                    CardScriptAddRandomCounter counter = ScriptableObject.CreateInstance<CardScriptAddRandomCounter>();
-                    counter.name = "Give Counter";
-                    counter.counterRange = new Vector2Int(-1, 1);
-                    data.createScripts = new CardScript[] { crown, health, damage, counter };
+                    data.createScripts = new CardScript[] 
+                    {
+                        GiveUpgrade(),
+                        AddRandomHealth(-1,3),
+                        AddRandomDamage(0,2),
+                        AddRandomCounter(-1,1)
+                    };
                 })
             );
 
@@ -118,8 +168,9 @@ namespace Tutorial5_Classes
             cardUpgrades.Add(new CardUpgradeDataBuilder(this)
                 .Create("CardUpgradeSuperDraw")
                 .WithTitle("Quickdraw Charm")
+                .WithText($"Gain <keyword=draw> and <keyword=zoomlin>")
                 .WithType(CardUpgradeData.Type.Charm)
-                .WithImage(ImagePath("blueDraw.png"))
+                .WithImage("blueDraw.png")
                 .SetTraits(TStack("Draw",2), TStack("Consume",1))
                 .FreeModify(
                 (data) =>
@@ -134,38 +185,86 @@ namespace Tutorial5_Classes
                 })
             );
 
+            //Scrapped GameModifier Code. Maybe added later in a later tutorial...
+            /* 
             bells.Add(new GameModifierDataBuilder(this)
                 .Create("BlessingCycler")
                 .WithTitle("Sun Bell of Cycling")
-                .WithDescription("Reduce hand size by 3, but draw a card at the end of each turn")
-                .WithBellSprite(ImagePath("cycleBell.png").ToSprite())
-                .WithDingerSprite(ImagePath("cycleDinger.png").ToSprite())
+                .WithDescription("Reduce hand size by <2>, but draw to hand size each turn")
+                .WithBellSprite("Images/cycleBell.png")
+                .WithDingerSprite("Images/cycleDinger.png")
                 .WithRingSfxEvent(Get<GameModifierData>("DoubleBlingsFromCombos").ringSfxEvent)
-                .WithSystemsToAdd("Tutorial5_Classes.DrawToAmountModifierSystem")
+                .WithSystemsToAdd("DrawToAmountModifierSystem")
                 .FreeModify(
                 (data) =>
                 {
+                    Texture2D texture = data.bellSprite.texture;
+                    Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 1f), 314);
+                    data.bellSprite = sprite;
+
+                    texture = data.dingerSprite.texture;
+                    sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 1.7f), 314);
+                    data.dingerSprite = sprite;
+
                     ScriptChangeHandSize handSize = ScriptableObject.CreateInstance<ScriptChangeHandSize>();
-                    handSize.name = "Reduce Hand Size By 3";
+                    handSize.name = "Reduce Hand Size By 2";
                     handSize.set = false;
-                    handSize.value = 3;
+                    handSize.value = -2;
                     data.startScripts = new Script[] { handSize };
                 })
             );
+            */
 
             tribes.Add(TribeCopy("Clunk", "Draw")
-                .WithFlag(ImagePath("DrawFlag.png").ToSprite())
+                .WithFlag("Images/DrawFlag.png")
+                .WithSelectSfxEvent(FMODUnity.RuntimeManager.PathToEventReference("event:/sfx/card/draw_multi"))
                 .SubscribeToAfterAllBuildEvent(
                 (data) =>
                 {
-                    data.leaders = CardList("needleLeader", "muncherLeader", "Leader1_heal_on_kill");
+                    GameObject gameObject = data.characterPrefab.gameObject.InstantiateKeepName();
+                    UnityEngine.Object.DontDestroyOnLoad(gameObject);
+                    gameObject.name = "Player (Tutorial.Draw)";
+                    data.characterPrefab = gameObject.GetComponent<Character>();
+
+                    data.leaders = DataList<CardData>("needleLeader", "muncherLeader", "Leader1_heal_on_kill");
+
                     Inventory inventory = new Inventory();
-                    inventory.deck.list = CardList("superMuncher", "SnowGlobe", "Sword", "Gearhammer", "Dart", "EnergyDart", "SunlightDrum", "Junkhead", "IceDice").ToList();
-                    inventory.upgrades.Add(Get<CardUpgradeData>("CardUpgradeCritical"));
+                    inventory.deck.list = DataList<CardData>("superMuncher", "SnowGlobe", "Sword", "Gearhammer", "Dart", "EnergyDart", "SunlightDrum", "Junkhead", "IceDice").ToList();
+                    inventory.upgrades.Add(TryGet<CardUpgradeData>("CardUpgradeCritical"));
                     data.startingInventory = inventory;
 
-                    RewardPool pool = Extensions.GetRewardPool("GeneralModifierPool");
-                    pool.list = new List<DataFile> { Get<GameModifierData>("BlessingCycler"), Get<GameModifierData>("BlessingHealth"), Get<GameModifierData>("BlessingHand") };
+                    RewardPool unitPool = CreateRewardPool("DrawUnitPool", "Units", DataList<CardData>(
+                        "NakedGnome", "GuardianGnome", "Havok",
+                        "Gearhead", "Bear", "TheBaker",
+                        "Pimento", "Pootie", "Tusk",
+                        "Ditto", "Flash", "TinyTyko"));
+
+                    RewardPool itemPool = CreateRewardPool("DrawItemPool", "Items", DataList<CardData>(
+                        "ShellShield", "StormbearSpirit", "PepperFlag", "SporePack", "Woodhead",
+                        "BeepopMask", "Dittostone", "Putty", "Dart", "SharkTooth",
+                        "Bumblebee", "Badoo", "Juicepot", "PomDispenser", "LuminShard",
+                        "Wrenchy", "Vimifier", "OhNo", "Madness", "Joob"));
+
+                    RewardPool charmPool = CreateRewardPool("DrawCharmPool", "Charms", DataList<CardUpgradeData>(
+                        "CardUpgradeSuperDraw", "CardUpgradeTrash",
+                        "CardUpgradeInk", "CardUpgradeOverload",
+                        "CardUpgradeMime", "CardUpgradeShellBecomesSpice",
+                        "CardUpgradeAimless"));
+
+                    data.rewardPools = new RewardPool[]
+                    {
+                        unitPool,
+                        itemPool,
+                        charmPool,
+                        Extensions.GetRewardPool("GeneralUnitPool"),
+                        Extensions.GetRewardPool("GeneralItemPool"),
+                        Extensions.GetRewardPool("GeneralCharmPool"),
+                        Extensions.GetRewardPool("GeneralModifierPool"),
+                        Extensions.GetRewardPool("SnowUnitPool"),
+                        Extensions.GetRewardPool("SnowItemPool"),
+                        Extensions.GetRewardPool("SnowCharmPool"),
+                    };
+
                 })
             );
 
@@ -174,11 +273,12 @@ namespace Tutorial5_Classes
 
         public override void Load()
         {
+            instance = this;
             if (!preLoaded) { CreateModAssets(); }
             base.Load();
 
             GameMode gameMode = Get<GameMode>("GameModeNormal");
-            gameMode.classes = gameMode.classes.Append(Get<ClassData>("Draw")).ToArray();
+            gameMode.classes = gameMode.classes.Append(TryGet<ClassData>("Draw")).ToArray();
 
             Events.OnEntityCreated += FixImage;
         }
@@ -186,7 +286,6 @@ namespace Tutorial5_Classes
         public override void Unload()
         {
             base.Unload();
-
             GameMode gameMode = Get<GameMode>("GameModeNormal");
             gameMode.classes = RemoveNulls(gameMode.classes);
 
@@ -229,9 +328,9 @@ namespace Tutorial5_Classes
         }
     }
    
+    /*
     public class DrawToAmountModifierSystem : GameSystem
     {
-        public int amount = 3;
         private void OnEnable()
         {
             Events.OnBattleTurnEnd += BattleTurnEnd;
@@ -244,28 +343,102 @@ namespace Tutorial5_Classes
 
         private void BattleTurnEnd(int turn)
         {
-            if (!Battle.instance.ended && References.Player.handContainer.Count < amount)
+            int amount = Events.GetHandSize(References.PlayerData.handSize);
+            if (!Battle.instance.ended && References.Player.handContainer.Count < amount && turn != 0)
             {
                 int amountToDraw = amount - References.Player.handContainer.Count;
                 ActionQueue.Stack(new ActionDraw(References.Player, amountToDraw));
             }
         }
+    
+    }
+    */
+
+    [HarmonyPatch(typeof(References), nameof(References.Classes), MethodType.Getter)]
+    static class FixClassesGetter
+    {
+        static void Postfix(ref ClassData[] __result) => __result = AddressableLoader.GetGroup<ClassData>("ClassData").ToArray();
     }
 
+    //Scrapped GameModifier Patch. Maybe will be used in a future tutorial.
+    /*
     [HarmonyPatch(typeof(GameObjectExt), "AddComponentByName")]
     class PatchAddComponent
     {
+        static string assem => typeof(PatchAddComponent).Assembly.GetName().Name;
+        static string namesp => typeof(PatchAddComponent).Namespace;
+
         static Component Postfix(Component __result, GameObject gameObject, string componentName)
         {
             if (__result == null)
             {
-                Type type = Type.GetType(componentName + ",Tutorial5-Classes");
+                Type type = Type.GetType(namesp + "." + componentName + "," + assem);
                 if (type != null)
                 {
                     return gameObject.AddComponent(type);
                 }
             }
             return __result;
+        }
+    }
+    */
+
+    [HarmonyPatch(typeof(TribeHutSequence), "SetupFlags")]
+    class PatchTribeHut
+    {
+        static string TribeName = "Draw";
+        static void Postfix(TribeHutSequence __instance)
+        {
+            GameObject gameObject = GameObject.Instantiate(__instance.flags[0].gameObject);
+            gameObject.transform.SetParent(__instance.flags[0].gameObject.transform.parent, false);
+            TribeFlagDisplay flagDisplay = gameObject.GetComponent<TribeFlagDisplay>();
+            ClassData tribe = Tutorial5.instance.TryGet<ClassData>(TribeName);
+            flagDisplay.flagSprite = tribe.flag;
+            __instance.flags = __instance.flags.Append(flagDisplay).ToArray();
+            flagDisplay.SetAvailable();
+            flagDisplay.SetUnlocked();
+
+            TribeDisplaySequence sequence2 = GameObject.FindObjectOfType<TribeDisplaySequence>(true);
+            GameObject gameObject2 = GameObject.Instantiate(sequence2.displays[1].gameObject);
+            gameObject2.transform.SetParent(sequence2.displays[2].gameObject.transform.parent, false);
+            sequence2.tribeNames = sequence2.tribeNames.Append(TribeName).ToArray();
+            sequence2.displays = sequence2.displays.Append(gameObject2).ToArray();
+
+            Button button = flagDisplay.GetComponentInChildren<Button>();
+            button.onClick.SetPersistentListenerState(0, UnityEngine.Events.UnityEventCallState.Off);
+            button.onClick.AddListener(() => { sequence2.Run(TribeName); });
+
+            //(SfxOneShot)
+            gameObject2.GetComponent<SfxOneshot>().eventRef = FMODUnity.RuntimeManager.PathToEventReference("event:/sfx/card/draw_multi");
+
+            //0: Flag (ImageSprite)
+            gameObject2.transform.GetChild(0).GetComponent<ImageSprite>().SetSprite(tribe.flag);
+
+            //1: Left (ImageSprite)
+            Sprite needle = Tutorial5.instance.TryGet<CardData>("needleLeader").mainSprite;
+            gameObject2.transform.GetChild(1).GetComponent<ImageSprite>().SetSprite(needle);
+
+            //2: Right (ImageSprite)
+            Sprite muncher = Tutorial5.instance.TryGet<CardData>("muncherLeader").mainSprite;
+            gameObject2.transform.GetChild(2).GetComponent<ImageSprite>().SetSprite(muncher);
+            gameObject2.transform.GetChild(2).localScale *= 1.2f;
+
+            //3: Textbox (Image)
+            gameObject2.transform.GetChild(3).GetComponent<Image>().color = new Color(0.12f, 0.47f, 0.57f);
+
+            //3-0: Text (LocalizedString)
+            StringTable collection = LocalizationHelper.GetCollection("UI Text", SystemLanguage.English);
+            collection.SetString("DrawTribeDesc", "Needle and the Frost Muncher realized they both held a strong desire of consuming cards. " +
+                "They banded together to form a new clan over this hobby. " +
+                "\n\n" +
+                "The tribe is an assortment of odds and ends that Needle found \"useful\". " +
+                "There is a strange fixation with drawing cards.");
+            gameObject2.transform.GetChild(3).GetChild(0).GetComponent<LocalizeStringEvent>().StringReference = collection.GetString("DrawTribeDesc");
+
+            //4:Title Ribbon (Image)
+            //4-0: Text (LocalizedString)
+            collection.SetString("DrawTribeTitle", "The Collectors");
+            gameObject2.transform.GetChild(4).GetChild(0).GetComponent<LocalizeStringEvent>().StringReference = collection.GetString("DrawTribeTitle");
         }
     }
 }
