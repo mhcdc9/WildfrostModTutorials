@@ -168,7 +168,7 @@ namespace Tutorial5_Classes
             cardUpgrades.Add(new CardUpgradeDataBuilder(this)
                 .Create("CardUpgradeSuperDraw")
                 .WithTitle("Quickdraw Charm")
-                .WithText($"Gain <keyword=draw> and <keyword=zoomlin>")
+                .WithText($"Gain <keyword=draw> <2> and <keyword=zoomlin>")
                 .WithType(CardUpgradeData.Type.Charm)
                 .WithImage("blueDraw.png")
                 .SetTraits(TStack("Draw",2), TStack("Consume",1))
