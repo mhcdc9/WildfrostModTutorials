@@ -114,7 +114,7 @@ namespace Tutorial5_Classes
 
         private RewardPool CreateRewardPool(string name, string type, DataFile[] list)
         {
-            RewardPool pool = new RewardPool();
+            RewardPool pool = ScriptableObject.CreateInstance<RewardPool>();
             pool.name = name;
             pool.type = type;
             pool.list = list.ToList();
@@ -228,7 +228,7 @@ namespace Tutorial5_Classes
 
                     data.leaders = DataList<CardData>("needleLeader", "muncherLeader", "Leader1_heal_on_kill");
 
-                    Inventory inventory = new Inventory();
+                    Inventory inventory = ScriptableObject.CreateInstance<Inventory>();
                     inventory.deck.list = DataList<CardData>("superMuncher", "SnowGlobe", "Sword", "Gearhammer", "Dart", "EnergyDart", "SunlightDrum", "Junkhead", "IceDice").ToList();
                     inventory.upgrades.Add(TryGet<CardUpgradeData>("CardUpgradeCritical"));
                     data.startingInventory = inventory;
@@ -276,7 +276,7 @@ namespace Tutorial5_Classes
             instance = this;
             if (!preLoaded) { CreateModAssets(); }
             base.Load();
-
+            CreateLocalizedStrings();
             GameMode gameMode = Get<GameMode>("GameModeNormal");
             gameMode.classes = gameMode.classes.Append(TryGet<ClassData>("Draw")).ToArray();
 
@@ -325,6 +325,22 @@ namespace Tutorial5_Classes
                 default:
                     return null;
             }
+        }
+
+        public string TribeTitleKey => GUID + ".TribeTitle";
+        public string TribeDescKey => GUID + ".TribeDesc";
+
+        //Call this method in Load()
+        private void CreateLocalizedStrings()
+        {
+            StringTable uiText = LocalizationHelper.GetCollection("UI Text", SystemLanguage.English);
+            uiText.SetString(TribeTitleKey, "The Collectors");                                       //Create the title
+            uiText.SetString(TribeDescKey, "Needle and the Frost Muncher realized they both held a strong desire of consuming cards. " +
+                "They banded together to form a new clan over this hobby. " +
+                "\n\n" +
+                "The tribe is an assortment of odds and ends that Needle found \"useful\". " +
+                "There is a strange fixation with drawing cards.");                                  //Create the description.
+
         }
     }
    
@@ -428,17 +444,11 @@ namespace Tutorial5_Classes
 
             //3-0: Text (LocalizedString)
             StringTable collection = LocalizationHelper.GetCollection("UI Text", SystemLanguage.English);
-            collection.SetString("DrawTribeDesc", "Needle and the Frost Muncher realized they both held a strong desire of consuming cards. " +
-                "They banded together to form a new clan over this hobby. " +
-                "\n\n" +
-                "The tribe is an assortment of odds and ends that Needle found \"useful\". " +
-                "There is a strange fixation with drawing cards.");
-            gameObject2.transform.GetChild(3).GetChild(0).GetComponent<LocalizeStringEvent>().StringReference = collection.GetString("DrawTribeDesc");
+            gameObject2.transform.GetChild(3).GetChild(0).GetComponent<LocalizeStringEvent>().StringReference = collection.GetString(Tutorial5.instance.TribeDescKey);
 
             //4:Title Ribbon (Image)
             //4-0: Text (LocalizedString)
-            collection.SetString("DrawTribeTitle", "The Collectors");
-            gameObject2.transform.GetChild(4).GetChild(0).GetComponent<LocalizeStringEvent>().StringReference = collection.GetString("DrawTribeTitle");
+            gameObject2.transform.GetChild(4).GetChild(0).GetComponent<LocalizeStringEvent>().StringReference = collection.GetString(Tutorial5.instance.TribeTitleKey);
         }
     }
 }
