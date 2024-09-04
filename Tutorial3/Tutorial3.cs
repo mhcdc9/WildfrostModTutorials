@@ -47,17 +47,14 @@ namespace Tutorial3
 
         public override string Description => "The goal of this tutorial is to create a charm with a keyword.";
 
-        private List<StatusEffectDataBuilder> statusEffects;
-        private List<CardUpgradeDataBuilder> cardUpgrades;
-        private List<KeywordDataBuilder> keywords;
+        public static List<object> assets = new List<object>();
+
         private bool preLoaded = false;
 
 
         private void CreateModAssets()
         {
-            keywords = new List<KeywordDataBuilder>();
-
-            keywords.Add(
+            assets.Add(
                 new KeywordDataBuilder(this)
                 .Create("glacial")
                 .WithTitle("Glacial")
@@ -69,9 +66,7 @@ namespace Tutorial3
                 .WithCanStack(false)
                 );
 
-            cardUpgrades = new List<CardUpgradeDataBuilder>();
-
-            cardUpgrades.Add(
+            assets.Add(
                 new CardUpgradeDataBuilder(this)
                 .CreateCharm("CardUpgradeGlacial")
                 .WithType(CardUpgradeData.Type.Charm)
@@ -89,11 +84,7 @@ namespace Tutorial3
                 );
 
 
-
-            
-            statusEffects = new List<StatusEffectDataBuilder>();
-
-            statusEffects.Add(
+            assets.Add(
                 new StatusEffectDataBuilder(this)
                 .Create<StatusEffectMeldXandY>("Apply Equal Snow And Frost")
                 .WithCanBeBoosted(false)
@@ -122,21 +113,31 @@ namespace Tutorial3
         protected override void Unload()
         {
             base.Unload();
+            UnloadFromClasses();
         }
 
+
+        //Credits to Hopeful for this method
         public override List<T> AddAssets<T, Y>()
         {
-            var typeName = typeof(Y).Name;
-            switch (typeName)
+            if (assets.OfType<T>().Any())
+                Debug.LogWarning($"[{Title}] adding {typeof(Y).Name}s: {assets.OfType<T>().Count()}");
+            return assets.OfType<T>().ToList();
+        }
+
+        public void UnloadFromClasses()
+        {
+            List<ClassData> tribes = AddressableLoader.GetGroup<ClassData>("ClassData");
+            foreach (ClassData tribe in tribes)
             {
-                case nameof(CardUpgradeData):
-                    return cardUpgrades.Cast<T>().ToList();
-                case nameof(KeywordData):
-                    return keywords.Cast<T>().ToList();
-                case nameof(StatusEffectData):
-                    return statusEffects.Cast<T>().ToList();
-                default:
-                    return null;
+                if (tribe == null || tribe.rewardPools == null) { continue; } //This isn't even a tribe; skip it.
+
+                foreach (RewardPool pool in tribe.rewardPools)
+                {
+                    if (pool == null) { continue; }; //This isn't even a reward pool; skip it.
+
+                    pool.list.RemoveAllWhere((item) => item == null || item.ModAdded == this); //Find and remove everything that needs to be removed.
+                }
             }
         }
     }
@@ -181,6 +182,8 @@ namespace Tutorial3
             }
             return false;
         }
+
+
     }
 
     public class CardScriptChangeBackground : CardScript

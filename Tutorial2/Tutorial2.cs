@@ -1,4 +1,5 @@
 ﻿using Deadpan.Enums.Engine.Components.Modding;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,9 +24,9 @@ namespace Tutorial2
 
         public override string Description => "The goal of this tutorial is to create two custom cards and two custom status effects.";
 
-        private List<CardDataBuilder> cards;
-        private List<StatusEffectDataBuilder> statusEffects;
         private bool preLoaded = false;
+
+        public static List<object> assets = new List<object>();
 
         private T TryGet<T>(string name) where T : DataFile
         {
@@ -54,10 +55,10 @@ namespace Tutorial2
 
         private void CreateModAssets()
         {
-            statusEffects = new List<StatusEffectDataBuilder>();
+            //Code for Status Effects
 
             //Status 0: Summon Shade Snake
-            statusEffects.Add(
+            assets.Add(
                 StatusCopy("Summon Fallow", "Summon Shade Snake")
                 .SubscribeToAfterAllBuildEvent(delegate (StatusEffectData data)
                 {
@@ -67,7 +68,7 @@ namespace Tutorial2
             //Debug.Log("[Tutorial] Summon Shade Snake Added.");
 
             //Status 1: Instant Summon Shade Snake
-            statusEffects.Add(
+            assets.Add(
                 StatusCopy("Instant Summon Fallow", "Instant Summon Shade Snake")
                 .SubscribeToAfterAllBuildEvent(delegate (StatusEffectData data)
                 {
@@ -77,7 +78,7 @@ namespace Tutorial2
             //Debug.Log("[Tutorial] Instant Summon Shade Snake Added.");
 
             //Status 2: Summon Snake On Deploy
-            statusEffects.Add(
+            assets.Add(
                 StatusCopy("When Deployed Summon Wowee", "When Deployed Summon Shade Snake")
                 .WithText("When deployed, summon {0}")
                 .WithTextInsert("<card=mhcdc9.wildfrost.tutorial.shadeSnake>")
@@ -89,7 +90,7 @@ namespace Tutorial2
             //Debug.Log("[Tutorial] Summon Shade Snake When Deployed Added.");
 
             //Status 3: Trigger When Shade Serpent In Row Attacks
-            statusEffects.Add(
+            assets.Add(
                 new StatusEffectDataBuilder(this)
                 .Create<StatusEffectTriggerWhenCertainAllyAttacks>("Trigger When Shade Serpent In Row Attacks")
                 .WithCanBeBoosted(false)
@@ -111,10 +112,10 @@ namespace Tutorial2
             //Debug.Log("[Tutorial] Trigger When Shade Serpent In Row Added.");
 
 
-            cards = new List<CardDataBuilder>();
+            //Code for Cards
 
             //Card 0: Shade Snake
-            cards.Add(
+            assets.Add(
                 new CardDataBuilder(this).CreateUnit("shadeSnake", "Shade Snake")
                 .SetSprites("ShadeSnake.png", "ShadeSnake BG.png")
                 .SetStats(4, 3, 0)
@@ -131,7 +132,7 @@ namespace Tutorial2
                 );
 
             //Card 1: Shade Serpent
-            cards.Add(
+            assets.Add(
                 new CardDataBuilder(this).CreateUnit("shadeSerpent", "Shade Serpent")
                 .SetSprites("ShadeSerpent.png", "ShadeSerpent BG.png")
                 .SetStats(8,1,3)
@@ -148,29 +149,39 @@ namespace Tutorial2
 
             preLoaded = true;
         }
-        public override void Load()
+        protected override void Load()
         {
             if (!preLoaded) { CreateModAssets(); } //The if statement is a flourish really. It makes the 2nd load of Load-Unload-Load faster.
             base.Load();
         }
 
-        public override void Unload()
+        protected override void Unload()
         {
             base.Unload();
+            UnloadFromClasses();
         }
 
-        public override List<T> AddAssets<T, Y>() //This method is called 6-7 times in base.Load() for each Builder. Can you name them all?
+        //Credits to Hopeful for this method
+        public override List<T> AddAssets<T, Y>()
         {
-            var typeName = typeof(T).Name;
-            //Debug.Log("[Tutorial] " + typeName);
-            switch(typeName)
+            if (assets.OfType<T>().Any())
+                Debug.LogWarning($"[{Title}] adding {typeof(Y).Name}s: {assets.OfType<T>().Count()}");
+            return assets.OfType<T>().ToList();
+        }
+
+        public void UnloadFromClasses()
+        {
+            List<ClassData> tribes = AddressableLoader.GetGroup<ClassData>("ClassData");
+            foreach(ClassData tribe in tribes)
             {
-                case nameof(CardDataBuilder):
-                    return cards.Cast<T>().ToList();
-                case nameof(StatusEffectDataBuilder):
-                    return statusEffects.Cast<T>().ToList();
-                default:
-                    return null;
+                if (tribe == null || tribe.rewardPools == null) { continue; } //This isn't even a tribe; skip it.
+
+                foreach(RewardPool pool in tribe.rewardPools)
+                {
+                    if (pool == null) { continue; }; //This isn't even a reward pool; skip it.
+
+                    pool.list.RemoveAllWhere((item) => item == null || item.ModAdded == this); //Find and remove everything that needs to be removed.
+                }
             }
         }
     }

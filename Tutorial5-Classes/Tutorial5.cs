@@ -28,6 +28,8 @@ namespace Tutorial5_Classes
 
         internal static Tutorial5 instance;
 
+        
+
         public static void AddComponent(string name)
         {
             Campaign.instance.gameObject.AddComponentByName(name);
@@ -35,11 +37,7 @@ namespace Tutorial5_Classes
 
         public Tutorial5(string baseDirectory) : base(baseDirectory) { }
 
-        public List<CardDataBuilder> cards = new List<CardDataBuilder>();
-        public List<CardUpgradeDataBuilder> cardUpgrades = new List<CardUpgradeDataBuilder>();
-        public List<StatusEffectDataBuilder> statusEffects = new List<StatusEffectDataBuilder>();
-        public List<GameModifierDataBuilder> bells = new List<GameModifierDataBuilder>();
-        public List<ClassDataBuilder> tribes = new List<ClassDataBuilder>();
+        public static List<object> assets = new List<object>();
 
         public bool preLoaded = false;
 
@@ -123,7 +121,7 @@ namespace Tutorial5_Classes
 
         private void CreateModAssets()
         {
-            cards.Add(CardCopy("Ruckus", "needleLeader")
+            assets.Add(CardCopy("Ruckus", "needleLeader")
                 .WithCardType("Leader")
                 .FreeModify(
                 (data) =>
@@ -138,7 +136,7 @@ namespace Tutorial5_Classes
                 })
             );
 
-            cards.Add(CardCopy("TrueFinalBoss6", "muncherLeader")
+            assets.Add(CardCopy("TrueFinalBoss6", "muncherLeader")
                 .WithCardType("Leader")
                 .SetStats(8,5,5)
                 .FreeModify(
@@ -156,7 +154,7 @@ namespace Tutorial5_Classes
                 })
             );
 
-            cards.Add(CardCopy("Wrenchy", "superMuncher")
+            assets.Add(CardCopy("Wrenchy", "superMuncher")
                 .WithTitle("Super Muncher")
                 .FreeModify(
                 (data) =>
@@ -165,7 +163,7 @@ namespace Tutorial5_Classes
                 })
             );
 
-            cardUpgrades.Add(new CardUpgradeDataBuilder(this)
+            assets.Add(new CardUpgradeDataBuilder(this)
                 .Create("CardUpgradeSuperDraw")
                 .WithTitle("Quickdraw Charm")
                 .WithText($"Gain <keyword=draw> <2> and <keyword=zoomlin>")
@@ -187,7 +185,7 @@ namespace Tutorial5_Classes
 
             //Scrapped GameModifier Code. Maybe added later in a later tutorial...
             /* 
-            bells.Add(new GameModifierDataBuilder(this)
+            assets.Add(new GameModifierDataBuilder(this)
                 .Create("BlessingCycler")
                 .WithTitle("Sun Bell of Cycling")
                 .WithDescription("Reduce hand size by <2>, but draw to hand size each turn")
@@ -215,7 +213,7 @@ namespace Tutorial5_Classes
             );
             */
 
-            tribes.Add(TribeCopy("Clunk", "Draw")
+            assets.Add(TribeCopy("Clunk", "Draw")
                 .WithFlag("Images/DrawFlag.png")
                 .WithSelectSfxEvent(FMODUnity.RuntimeManager.PathToEventReference("event:/sfx/card/draw_multi"))
                 .SubscribeToAfterAllBuildEvent(
@@ -287,7 +285,9 @@ namespace Tutorial5_Classes
         {
             base.Unload();
             GameMode gameMode = Get<GameMode>("GameModeNormal");
+            UnloadFromClasses();
             gameMode.classes = RemoveNulls(gameMode.classes);
+            UnloadFromClasses();
 
             Events.OnEntityCreated -= FixImage;
         }
@@ -307,23 +307,27 @@ namespace Tutorial5_Classes
             return list.ToArray();
         }
 
+        //Credits to Hopeful for this method
         public override List<T> AddAssets<T, Y>()
         {
-            var typeName = typeof(Y).Name;
-            switch (typeName)
+            if (assets.OfType<T>().Any())
+                Debug.LogWarning($"[{Title}] adding {typeof(Y).Name}s: {assets.OfType<T>().Select(a => a._data.name).Join()}");
+            return assets.OfType<T>().ToList();
+        }
+
+        public void UnloadFromClasses()
+        {
+            List<ClassData> tribes = AddressableLoader.GetGroup<ClassData>("ClassData");
+            foreach (ClassData tribe in tribes)
             {
-                case nameof(CardData):
-                    return cards.Cast<T>().ToList();
-                case nameof(CardUpgradeData):
-                    return cardUpgrades.Cast<T>().ToList();
-                case nameof(StatusEffectData):
-                    return statusEffects.Cast<T>().ToList();
-                case nameof(GameModifierData):
-                    return bells.Cast<T>().ToList();
-                case nameof(ClassData):
-                    return tribes.Cast<T>().ToList();
-                default:
-                    return null;
+                if (tribe == null || tribe.rewardPools == null) { continue; } //This isn't even a tribe; skip it.
+
+                foreach (RewardPool pool in tribe.rewardPools)
+                {
+                    if (pool == null) { continue; }; //This isn't even a reward pool; skip it.
+
+                    pool.list.RemoveAllWhere((item) => item == null || item.ModAdded == this); //Find and remove everything that needs to be removed.
+                }
             }
         }
 
