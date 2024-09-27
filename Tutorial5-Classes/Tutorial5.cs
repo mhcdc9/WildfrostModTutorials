@@ -41,8 +41,8 @@ namespace Tutorial5_Classes
 
         public bool preLoaded = false;
 
-        private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(Get<StatusEffectData>(name), amount);
-        private CardData.TraitStacks TStack(string name, int amount) => new CardData.TraitStacks(Get<TraitData>(name), amount);
+        private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(TryGet<StatusEffectData>(name), amount);
+        private CardData.TraitStacks TStack(string name, int amount) => new CardData.TraitStacks(TryGet<TraitData>(name), amount);
 
         internal T TryGet<T>(string name) where T : DataFile
         {
@@ -82,7 +82,7 @@ namespace Tutorial5_Classes
         {
             CardScriptGiveUpgrade script = ScriptableObject.CreateInstance<CardScriptGiveUpgrade>();
             script.name = $"Give {name}";
-            script.upgradeData = Get<CardUpgradeData>(name);
+            script.upgradeData = TryGet<CardUpgradeData>(name);
             return script;
         }
 
@@ -177,7 +177,7 @@ namespace Tutorial5_Classes
                     item.name = "Is Item";
                     TargetConstraintHasTrait consume = ScriptableObject.CreateInstance<TargetConstraintHasTrait>();
                     consume.name = "Does Not Have Consume";
-                    consume.trait = Get<TraitData>("Consume");
+                    consume.trait = TryGet<TraitData>("Consume");
                     consume.not = true;
                     data.targetConstraints = new TargetConstraint[] {item, consume};
                 })
@@ -275,7 +275,7 @@ namespace Tutorial5_Classes
             if (!preLoaded) { CreateModAssets(); }
             base.Load();
             CreateLocalizedStrings();
-            GameMode gameMode = Get<GameMode>("GameModeNormal");
+            GameMode gameMode = TryGet<GameMode>("GameModeNormal");
             gameMode.classes = gameMode.classes.Append(TryGet<ClassData>("Draw")).ToArray();
 
             Events.OnEntityCreated += FixImage;
@@ -284,7 +284,7 @@ namespace Tutorial5_Classes
         public override void Unload()
         {
             base.Unload();
-            GameMode gameMode = Get<GameMode>("GameModeNormal");
+            GameMode gameMode = TryGet<GameMode>("GameModeNormal");
             UnloadFromClasses();
             gameMode.classes = RemoveNulls(gameMode.classes);
             UnloadFromClasses();
