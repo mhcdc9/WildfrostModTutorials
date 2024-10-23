@@ -98,7 +98,7 @@ namespace Tutorial7_CampaignNodes
         {
             bool flag = false;
             string s = "";
-            foreach(CardData data in References.PlayerData.inventory.deck)
+            foreach(CardData data in References.PlayerData.inventory.deck.InRandomOrder())
             {
                 if (data.cardType.name == "Friendly" && data.injuries.Count == 0)
                 {
@@ -116,11 +116,6 @@ namespace Tutorial7_CampaignNodes
             yield return TextPopUp(node, flag ? InjuryString : AllInjuryString, s);
             yield return Sequences.Wait(0.5f);
         }
-
-        public static string GoldKey = "mhcdc9.wildfrost.tutorial.PortalNode.GoldKey";
-        public static string InjuryKey = "mhcdc9.wildfrost.tutorial.PortalNode.InjuryKey";
-        public static string AllInjuryKey = "mhcdc9.wildfrost.tutorial.PortalNode.AllInjuryKey";
-        public static string CharmKey = "mhcdc9.wildfrost.tutorial.PortalNode.CharmKey";
 
         public static LocalizedString GoldString;
         public static LocalizedString InjuryString;
@@ -180,7 +175,7 @@ namespace Tutorial7_CampaignNodes
                 return (Tutorial7.instance.Get<CardUpgradeData>(upgradeName) == null);
             }
                 
-            return false;
+            return true;
         }
     }
 }

@@ -207,15 +207,20 @@ namespace Tutorial7_CampaignNodes
         //Call this method in Load()
         private void CreateLocalizedStrings()
         {
-            StringTable uiText = LocalizationHelper.GetCollection("UI Text", SystemLanguage.English);
-            uiText.SetString(CampaignNodeTypePortal.GoldKey, "Found riches!");
-            CampaignNodeTypePortal.GoldString = uiText.GetString(CampaignNodeTypePortal.GoldKey);
-            uiText.SetString(CampaignNodeTypePortal.InjuryKey, "{0} injured");
-            CampaignNodeTypePortal.InjuryString = uiText.GetString(CampaignNodeTypePortal.InjuryKey);
-            uiText.SetString(CampaignNodeTypePortal.AllInjuryKey, "Too injured to continue");
-            CampaignNodeTypePortal.AllInjuryString = uiText.GetString(CampaignNodeTypePortal.AllInjuryKey);
-            uiText.SetString(CampaignNodeTypePortal.CharmKey, "Found {0}!");
-            CampaignNodeTypePortal.CharmString = uiText.GetString(CampaignNodeTypePortal.CharmKey);
+            string GoldKey = "mhcdc9.wildfrost.tutorial.PortalNode.GoldKey";
+            string InjuryKey = "mhcdc9.wildfrost.tutorial.PortalNode.InjuryKey";
+            string AllInjuryKey = "mhcdc9.wildfrost.tutorial.PortalNode.AllInjuryKey";
+            string CharmKey = "mhcdc9.wildfrost.tutorial.PortalNode.CharmKey";
+
+        StringTable uiText = LocalizationHelper.GetCollection("UI Text", SystemLanguage.English);
+            uiText.SetString(GoldKey, "Found riches!");
+            CampaignNodeTypePortal.GoldString = uiText.GetString(GoldKey);
+            uiText.SetString(InjuryKey, "{0} injured");
+            CampaignNodeTypePortal.InjuryString = uiText.GetString(InjuryKey);
+            uiText.SetString(AllInjuryKey, "Too injured to continue");
+            CampaignNodeTypePortal.AllInjuryString = uiText.GetString(AllInjuryKey);
+            uiText.SetString(CharmKey, "Found {0}!");
+            CampaignNodeTypePortal.CharmString = uiText.GetString(CharmKey);
         }
     }
 
