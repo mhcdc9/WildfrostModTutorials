@@ -41,14 +41,16 @@ namespace Tutorial5_Classes
 
         public bool preLoaded = false;
 
-        private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(TryGet<StatusEffectData>(name), amount);
-        private CardData.TraitStacks TStack(string name, int amount) => new CardData.TraitStacks(TryGet<TraitData>(name), amount);
+        internal CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(TryGet<StatusEffectData>(name), amount);
+        internal CardData.TraitStacks TStack(string name, int amount) => new CardData.TraitStacks(TryGet<TraitData>(name), amount);
 
         internal T TryGet<T>(string name) where T : DataFile
         {
             T data;
             if (typeof(StatusEffectData).IsAssignableFrom(typeof(T)))
                 data = base.Get<StatusEffectData>(name) as T;
+            else if (typeof(KeywordData).IsAssignableFrom(typeof(T)))
+                data = base.Get<KeywordData>(name.ToLower()) as T;
             else
                 data = base.Get<T>(name);
 
@@ -58,27 +60,20 @@ namespace Tutorial5_Classes
             return data;
         }
 
-        private CardDataBuilder CardCopy(string oldName, string newName)
+        private CardDataBuilder CardCopy(string oldName, string newName) => DataCopy<CardData, CardDataBuilder>(oldName, newName);
+        private ClassDataBuilder TribeCopy(string oldName, string newName) => DataCopy<ClassData,ClassDataBuilder>(oldName, newName);
+        private T DataCopy<Y, T>(string oldName, string newName) where Y : DataFile where T : DataFileBuilder<Y, T>, new()
         {
-            CardData data = TryGet<CardData>(oldName).InstantiateKeepName();
+            Y data = Get<Y>(oldName).InstantiateKeepName();
             data.name = GUID + "." + newName;
-            CardDataBuilder builder = data.Edit<CardData, CardDataBuilder>();
-            builder.Mod = this;
-            return builder;
-        }
-
-        private ClassDataBuilder TribeCopy(string oldName, string newName)
-        {
-            ClassData data = TryGet<ClassData>(oldName).InstantiateKeepName();
-            data.name = GUID + "." + newName;
-            ClassDataBuilder builder = data.Edit<ClassData, ClassDataBuilder>();
+            T builder = data.Edit<Y, T>();
             builder.Mod = this;
             return builder;
         }
 
         private T[] DataList<T>(params string[] names) where T : DataFile => names.Select((s) => TryGet<T>(s)).ToArray();
 
-        private CardScript GiveUpgrade(string name = "Crown")
+        internal CardScript GiveUpgrade(string name = "Crown")
         {
             CardScriptGiveUpgrade script = ScriptableObject.CreateInstance<CardScriptGiveUpgrade>();
             script.name = $"Give {name}";
@@ -86,7 +81,7 @@ namespace Tutorial5_Classes
             return script;
         }
 
-        private CardScript AddRandomHealth(int min, int max)
+        internal CardScript AddRandomHealth(int min, int max)
         {
             CardScriptAddRandomHealth health = ScriptableObject.CreateInstance<CardScriptAddRandomHealth>();
             health.name = "Random Health";
@@ -94,7 +89,7 @@ namespace Tutorial5_Classes
             return health;
         }
 
-        private CardScript AddRandomDamage(int min, int max)
+        internal CardScript AddRandomDamage(int min, int max)
         {
             CardScriptAddRandomDamage damage = ScriptableObject.CreateInstance<CardScriptAddRandomDamage>();
             damage.name = "Give Damage";
@@ -102,7 +97,7 @@ namespace Tutorial5_Classes
             return damage;
         }
 
-        private CardScript AddRandomCounter(int min, int max)
+        internal CardScript AddRandomCounter(int min, int max)
         {
             CardScriptAddRandomCounter counter = ScriptableObject.CreateInstance<CardScriptAddRandomCounter>();
             counter.name = "Give Counter";
@@ -222,6 +217,7 @@ namespace Tutorial5_Classes
                     GameObject gameObject = data.characterPrefab.gameObject.InstantiateKeepName();
                     UnityEngine.Object.DontDestroyOnLoad(gameObject);
                     gameObject.name = "Player (Tutorial.Draw)";
+                    data.id = "Tutorial.Draw";
                     data.characterPrefab = gameObject.GetComponent<Character>();
 
                     data.leaders = DataList<CardData>("needleLeader", "muncherLeader", "Leader1_heal_on_kill");

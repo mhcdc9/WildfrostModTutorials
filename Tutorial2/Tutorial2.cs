@@ -33,6 +33,8 @@ namespace Tutorial2
             T data;
             if (typeof(StatusEffectData).IsAssignableFrom(typeof(T)))
                 data = base.Get<StatusEffectData>(name) as T;
+            else if (typeof(KeywordData).IsAssignableFrom(typeof(T)))
+                data = base.Get<KeywordData>(name.ToLower()) as T;
             else
                 data = base.Get<T>(name);
 
@@ -46,6 +48,7 @@ namespace Tutorial2
         {
             StatusEffectData data = TryGet<StatusEffectData>(oldName).InstantiateKeepName();
             data.name = GUID + "." + newName;
+            data.targetConstraints = new TargetConstraint[0];
             StatusEffectDataBuilder builder = data.Edit<StatusEffectData, StatusEffectDataBuilder>();
             builder.Mod = this;
             return builder;

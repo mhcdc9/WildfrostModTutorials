@@ -114,7 +114,6 @@ namespace Tutorial7_CampaignNodes
             }
             Campaign.PromptSave();
             yield return TextPopUp(node, flag ? InjuryString : AllInjuryString, s);
-            yield return Sequences.Wait(0.5f);
         }
 
         public static LocalizedString GoldString;

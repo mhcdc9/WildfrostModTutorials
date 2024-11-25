@@ -53,6 +53,8 @@ namespace Tutorial7_CampaignNodes
             T data;
             if (typeof(StatusEffectData).IsAssignableFrom(typeof(T)))
                 data = base.Get<StatusEffectData>(name) as T;
+            else if (typeof(KeywordData).IsAssignableFrom(typeof(T)))
+                data = base.Get<KeywordData>(name.ToLower()) as T;
             else
                 data = base.Get<T>(name);
 
