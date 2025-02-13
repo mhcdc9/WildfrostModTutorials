@@ -95,7 +95,7 @@ namespace Tutorial4_Patching
         }
     }
 
-    [HarmonyPatch(typeof(Dead.Random), "Range", new Type[]
+    [HarmonyPatch(typeof(Dead.Random), nameof(Dead.Random.Range), new Type[]
     {
         typeof(int),
         typeof(int)
@@ -128,7 +128,7 @@ namespace Tutorial4_Patching
         }
     }
 
-    [HarmonyPatch(typeof(ChooseNewCardSequence),"Run")]
+    [HarmonyPatch(typeof(ChooseNewCardSequence),nameof(ChooseNewCardSequence.Run))]
     class PatchPickMe
     {
         static IEnumerator Postfix(IEnumerator __result, ChooseNewCardSequence __instance, GameObject ___cardGroupLayout, CardContainer ___cardContainer)

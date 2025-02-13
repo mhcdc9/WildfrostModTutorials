@@ -28,7 +28,7 @@ namespace Tutorial2
 
         public static List<object> assets = new List<object>();
 
-        private T TryGet<T>(string name) where T : DataFile
+        public T TryGet<T>(string name) where T : DataFile
         {
             T data;
             if (typeof(StatusEffectData).IsAssignableFrom(typeof(T)))
@@ -44,7 +44,7 @@ namespace Tutorial2
             return data;
         }
 
-        private StatusEffectDataBuilder StatusCopy(string oldName, string newName)
+        public StatusEffectDataBuilder StatusCopy(string oldName, string newName)
         {
             StatusEffectData data = TryGet<StatusEffectData>(oldName).InstantiateKeepName();
             data.name = GUID + "." + newName;
@@ -54,7 +54,7 @@ namespace Tutorial2
             return builder;
         }
 
-        private CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(TryGet<StatusEffectData>(name), amount);
+        public CardData.StatusEffectStacks SStack(string name, int amount) => new CardData.StatusEffectStacks(TryGet<StatusEffectData>(name), amount);
 
         private void CreateModAssets()
         {
@@ -63,9 +63,9 @@ namespace Tutorial2
             //Status 0: Summon Shade Snake
             assets.Add(
                 StatusCopy("Summon Fallow", "Summon Shade Snake")
-                .SubscribeToAfterAllBuildEvent(delegate (StatusEffectData data)
+                .SubscribeToAfterAllBuildEvent<StatusEffectSummon>(data =>
                 {
-                    ((StatusEffectSummon)data).summonCard = TryGet<CardData>("shadeSnake"); //Alternatively, I could've put mhcdc9.wildfrost.tutorial.shadeSnake
+                    data.summonCard = TryGet<CardData>("shadeSnake"); //Alternatively, I could've put mhcdc9.wildfrost.tutorial.shadeSnake
                 })
                 );
             //Debug.Log("[Tutorial] Summon Shade Snake Added.");
@@ -73,9 +73,9 @@ namespace Tutorial2
             //Status 1: Instant Summon Shade Snake
             assets.Add(
                 StatusCopy("Instant Summon Fallow", "Instant Summon Shade Snake")
-                .SubscribeToAfterAllBuildEvent(delegate (StatusEffectData data)
+                .SubscribeToAfterAllBuildEvent<StatusEffectInstantSummon>(data =>
                 {
-                    ((StatusEffectInstantSummon)data).targetSummon = TryGet<StatusEffectData>("Summon Shade Snake") as StatusEffectSummon;
+                    data.targetSummon = TryGet<StatusEffectData>("Summon Shade Snake") as StatusEffectSummon;
                 })
                 );
             //Debug.Log("[Tutorial] Instant Summon Shade Snake Added.");
@@ -85,9 +85,9 @@ namespace Tutorial2
                 StatusCopy("When Deployed Summon Wowee", "When Deployed Summon Shade Snake")
                 .WithText("When deployed, summon {0}")
                 .WithTextInsert("<card=mhcdc9.wildfrost.tutorial.shadeSnake>")
-                .SubscribeToAfterAllBuildEvent(delegate (StatusEffectData data)
+                .SubscribeToAfterAllBuildEvent<StatusEffectApplyXWhenDeployed>(data =>
                 {
-                    ((StatusEffectApplyXWhenDeployed)data).effectToApply = TryGet<StatusEffectData>("Instant Summon Shade Snake");
+                    data.effectToApply = TryGet<StatusEffectData>("Instant Summon Shade Snake");
                 })
                 );
             //Debug.Log("[Tutorial] Summon Shade Snake When Deployed Added.");
@@ -106,10 +106,10 @@ namespace Tutorial2
                         data.isReaction = true;
                         data.stackable = false;
                     })
-                .SubscribeToAfterAllBuildEvent(
-                    delegate(StatusEffectData data)
+                .SubscribeToAfterAllBuildEvent< StatusEffectTriggerWhenCertainAllyAttacks>(
+                    data =>
                     {
-                        ((StatusEffectTriggerWhenCertainAllyAttacks)data).ally = TryGet<CardData>("shadeSerpent");
+                        data.ally = TryGet<CardData>("shadeSerpent");
                     })
                 );
             //Debug.Log("[Tutorial] Trigger When Shade Serpent In Row Added.");
@@ -125,7 +125,7 @@ namespace Tutorial2
                 .WithCardType("Summoned")
                 .WithFlavour("Hissssssssss") //Should not show up anymore.
                 //.SetStartWithEffect(SStack("Trigger When Ally In Row Attacks",1))
-                .SubscribeToAfterAllBuildEvent(delegate (CardData data)
+                .SubscribeToAfterAllBuildEvent(data =>
                 {
                     data.startWithEffects = new CardData.StatusEffectStacks[1]
                     {
@@ -141,7 +141,7 @@ namespace Tutorial2
                 .SetStats(8,1,3)
                 .WithCardType("Friendly")
                 .AddPool("MagicUnitPool") //Shademancers
-                .SubscribeToAfterAllBuildEvent(delegate (CardData data)
+                .SubscribeToAfterAllBuildEvent(data =>
                 {
                     data.startWithEffects = new CardData.StatusEffectStacks[1]
                     {

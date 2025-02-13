@@ -70,13 +70,14 @@ namespace Tutorial3
 
             assets.Add(
                 new CardUpgradeDataBuilder(this)
-                .CreateCharm("CardUpgradeGlacial")
+                .Create("CardUpgradeGlacial")
+                .AddPool("GeneralCharmPool")
                 .WithType(CardUpgradeData.Type.Charm)
                 .WithImage("GlacialCharm.png")
                 .WithTitle("Glacial Charm")
                 .WithText($"Gain <keyword={Extensions.PrefixGUID("glacial",this)}>") //Get allows me to skip the GUID. This does not.
                 .WithTier(2) //Affects cost in shops
-                .SubscribeToAfterAllBuildEvent(delegate (CardUpgradeData data)
+                .SubscribeToAfterAllBuildEvent(data =>
                 {
                     data.effects = new CardData.StatusEffectStacks[1] { SStack("Apply Equal Snow And Frost", 1) };
                     CardScriptChangeBackground script = ScriptableObject.CreateInstance<CardScriptChangeBackground>();
