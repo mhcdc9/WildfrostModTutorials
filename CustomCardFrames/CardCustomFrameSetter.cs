@@ -90,7 +90,7 @@ namespace CustomCardFrames
             */
         }
 
-        public virtual Sprite GetSprite(string name, int num) => sprites[name];
+        public virtual Sprite GetSprite(string name, int num) => sprites.ContainsKey(name+num) ? sprites[name + num] : sprites[name];
 
 
         //If you extend this class, these methods might be useful
